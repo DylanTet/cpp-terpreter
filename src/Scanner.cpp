@@ -39,8 +39,40 @@ public:
       break;
     }
 
-    default:
-      std::cout << "Unknown token.\n";
+    case '*': {
+      Token new_token = {"*", "null", "STAR"};
+      add_token(new_token);
+      break;
+    }
+
+    case '.': {
+      Token new_token = {".", "null", "DOT"};
+      add_token(new_token);
+      break;
+    }
+
+    case ',': {
+      Token new_token = {",", "null", "COMMA"};
+      add_token(new_token);
+      break;
+    }
+
+    case '+': {
+      Token new_token = {"+", "null", "PLUS"};
+      add_token(new_token);
+      break;
+    }
+
+    case '-': {
+      Token new_token = {"-", "null", "MINUS"};
+      add_token(new_token);
+      break;
+    }
+    case ';': {
+      Token new_token = {";", "null", "SEMICOLON"};
+      add_token(new_token);
+      break;
+    }
     }
   }
 

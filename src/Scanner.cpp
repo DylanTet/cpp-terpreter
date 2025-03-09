@@ -16,13 +16,25 @@ public:
   void scan_token(char token) {
     switch (token) {
     case '(': {
-      Token new_token = {"(", "", "LEFT_PAREN"};
+      Token new_token = {"(", "null", "LEFT_PAREN"};
       add_token(new_token);
       break;
     }
 
     case ')': {
-      Token new_token = {")", "", "RIGHT_PAREN"};
+      Token new_token = {")", "null", "RIGHT_PAREN"};
+      add_token(new_token);
+      break;
+    }
+
+    case '{': {
+      Token new_token = {"{", "null", "LEFT_BRACE"};
+      add_token(new_token);
+      break;
+    }
+
+    case '}': {
+      Token new_token = {"}", "null", "RIGHT_BRACE"};
       add_token(new_token);
       break;
     }
@@ -38,11 +50,12 @@ public:
       scan_token(token);
     }
 
-    Token eof_token = {"", "", "EOF"};
+    Token eof_token = {"", "null", "EOF"};
     add_token(eof_token);
 
     for (Token &token : token_list) {
-      std::cout << token.type << " " << token.lexeme << " null\n";
+      std::cout << token.type << " " << token.lexeme << " " << token.literal
+                << '\n';
     }
   }
 

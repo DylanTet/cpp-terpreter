@@ -11,6 +11,7 @@ struct Token {
 
 class Scanner {
 public:
+  Scanner() : line(1) {}
   void add_token(Token token) { token_list.emplace_back(token); }
 
   void scan_token(char token) {
@@ -68,11 +69,18 @@ public:
       add_token(new_token);
       break;
     }
+
     case ';': {
       Token new_token = {";", "null", "SEMICOLON"};
       add_token(new_token);
       break;
     }
+
+    default:
+      std::cerr << "[line " << line << "] "
+                << "Error: Unexpected character: " << token << '\n';
+      has_error = true;
+      break;
     }
   }
 
@@ -89,8 +97,13 @@ public:
       std::cout << token.type << " " << token.lexeme << " " << token.literal
                 << '\n';
     }
+
+    if (has_error)
+      exit(65);
   }
 
 private:
   std::vector<Token> token_list;
+  int line;
+  bool has_error;
 };

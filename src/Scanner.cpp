@@ -11,7 +11,7 @@ struct Token {
 
 class Scanner {
 public:
-  Scanner() : line(1) {}
+  Scanner(std::string_view content) : line(1), content(content), current(0) {}
   void add_token(Token token) { token_list.emplace_back(token); }
 
   void scan_token(char token) {
@@ -76,6 +76,22 @@ public:
       break;
     }
 
+    case '=': {
+      Token new_token;
+      if (content[current] == '=') {
+        new_token.type = "EQUAL_EQUAL";
+        new_token.lexeme = "==";
+        new_token.literal = "null";
+        current++;
+      } else {
+        new_token.type = "EQUAL";
+        new_token.lexeme = "=";
+        new_token.literal = "null";
+      }
+      add_token(new_token);
+      break;
+    }
+
     default:
       std::cerr << "[line " << line << "] "
                 << "Error: Unexpected character: " << token << '\n';
@@ -84,10 +100,11 @@ public:
     }
   }
 
-  void scan_tokens(std::string_view file_content) {
-    // Reset the start of our current token
-    for (char token : file_content) {
-      scan_token(token);
+  bool at_content_end() { return current >= content.size(); }
+
+  void scan_tokens() {
+    while (!at_content_end()) {
+      scan_token(content[current++]);
     }
 
     Token eof_token = {"", "null", "EOF"};
@@ -104,6 +121,8 @@ public:
 
 private:
   std::vector<Token> token_list;
+  std::string content;
+  int current;
   int line;
   bool has_error;
 };

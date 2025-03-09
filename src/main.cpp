@@ -33,8 +33,8 @@ int main(int argc, char *argv[]) {
 
   if (command == "tokenize") {
     std::string file_contents = read_file_contents(argv[2]);
-    Scanner scanner;
-    scanner.scan_tokens(file_contents);
+    Scanner scanner(file_contents);
+    scanner.scan_tokens();
   } else {
     std::cerr << "Unknown command: " << command << std::endl;
     return 1;

@@ -11,7 +11,8 @@ struct Token {
 
 class Scanner {
 public:
-  Scanner(std::string_view content) : line(1), content(content), current(0) {}
+  Scanner(std::string_view content)
+      : line(1), content(content), current(0), has_error(false) {}
   void add_token(Token token) { token_list.emplace_back(token); }
 
   void scan_token(char token) {
@@ -86,6 +87,22 @@ public:
       } else {
         new_token.type = "EQUAL";
         new_token.lexeme = "=";
+        new_token.literal = "null";
+      }
+      add_token(new_token);
+      break;
+    }
+
+    case '!': {
+      Token new_token;
+      if (content[current] == '=') {
+        new_token.type = "BANG_EQUAL";
+        new_token.lexeme = "!=";
+        new_token.literal = "null";
+        current++;
+      } else {
+        new_token.type = "BANG";
+        new_token.lexeme = "!";
         new_token.literal = "null";
       }
       add_token(new_token);

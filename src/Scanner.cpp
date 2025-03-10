@@ -109,6 +109,38 @@ public:
       break;
     }
 
+    case '>': {
+      Token new_token;
+      if (content[current] == '=') {
+        new_token.type = "GREATER_EQUAL";
+        new_token.lexeme = ">=";
+        new_token.literal = "null";
+        current++;
+      } else {
+        new_token.type = "GREATER";
+        new_token.lexeme = ">";
+        new_token.literal = "null";
+      }
+      add_token(new_token);
+      break;
+    }
+
+    case '<': {
+      Token new_token;
+      if (content[current] == '=') {
+        new_token.type = "LESS_EQUAL";
+        new_token.lexeme = "<=";
+        new_token.literal = "null";
+        current++;
+      } else {
+        new_token.type = "LESS";
+        new_token.lexeme = "<";
+        new_token.literal = "null";
+      }
+
+      add_token(new_token);
+      break;
+    }
     default:
       std::cerr << "[line " << line << "] "
                 << "Error: Unexpected character: " << token << '\n';

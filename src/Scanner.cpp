@@ -208,6 +208,14 @@ public:
       break;
     }
 
+    case ' ':
+    case '\r':
+    case '\t':
+      break;
+    case '\n':
+      line++;
+      break;
+
     default:
       std::cerr << "[line " << line << "] "
                 << "Error: Unexpected character: " << token << '\n';

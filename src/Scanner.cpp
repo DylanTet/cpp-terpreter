@@ -23,7 +23,8 @@ enum TokenType {
   SLASH,
   EOF_TOKEN,
   BANG,
-  BANG_EQUAL
+  BANG_EQUAL,
+  STRING
 };
 
 struct Token {
@@ -73,10 +74,10 @@ struct Token {
       return "EQUAL";
     case TokenType::EQUAL_EQUAL:
       return "EQUAL_EQUAL";
-      // case TokenType::IDENTIFIER:
-      //   return "IDENTIFIER";
-      // case TokenType::STRING:
-      //   return "STRING";
+    // case TokenType::IDENTIFIER:
+    //   return "IDENTIFIER";
+    case TokenType::STRING:
+      return "STRING";
       // case TokenType::NUMBER:
       //   return "NUMBER";
     case TokenType::EOF_TOKEN:
@@ -98,15 +99,51 @@ public:
     return content.at(current);
   }
 
-  void add_token(TokenType token_type) {
-    Token new_token = {.type = token_type,
-                       .lexeme = content.substr(start, current - start),
-                       .literal = "null",
-                       .line = line};
+  void add_token(TokenType token_type) { add_token(token_type, "null"); }
+
+  template <typename T> void add_token(TokenType type, T value) {
+    // std::string literal_str;
+
+    // if constexpr (std::is_same_v<T, std::string>) {
+    //   literal_str = value;
+    // } else if constexpr (std::is_same_v<T, double> ||
+    //                      std::is_same_v<T, float>) {
+    //   literal_str = std::to_string(value);
+    // } else if constexpr (std::is_same_v<T, int>) {
+    //   literal_str = std::to_string(value);
+    // } else if constexpr (std::is_same_v<T, bool>) {
+    //   literal_str = value ? "true" : "false";
+    // }
+
+    std::string lexeme = content.substr(start, current - start);
+    Token new_token = {
+        .type = type, .lexeme = lexeme, .literal = value, .line = line};
 
     token_list.emplace_back(new_token);
   }
 
+  void handle_string() {
+    while (peek_next() != '"' && !at_content_end()) {
+      if (peek_next() == '\n')
+        line++;
+
+      current++;
+    }
+
+    if (at_content_end()) {
+      std::cerr << "["
+                << "line " << line << "] Error: "
+                << "Unterminated string.\n";
+      has_error = true;
+      return;
+    }
+
+    // Move past the closing "
+    current++;
+
+    std::string value = content.substr(start + 1, (current - start) - 2);
+    add_token(STRING, value);
+  }
   void scan_token(char token) {
     switch (token) {
     case '(':
@@ -216,6 +253,10 @@ public:
       line++;
       break;
 
+    case '"':
+      handle_string();
+      break;
+
     default:
       std::cerr << "[line " << line << "] "
                 << "Error: Unexpected character: " << token << '\n';
@@ -232,8 +273,7 @@ public:
       scan_token(content[current++]);
     }
 
-    Token eof_token = {
-        .type = EOF_TOKEN, .lexeme = "", .literal = "null", .line = line};
+    Token eof_token = {TokenType::EOF_TOKEN, "", "null", line};
     token_list.emplace_back(eof_token);
 
     for (Token &token : token_list) {

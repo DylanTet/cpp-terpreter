@@ -1,4 +1,6 @@
+#include <iomanip>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -24,7 +26,8 @@ enum TokenType {
   EOF_TOKEN,
   BANG,
   BANG_EQUAL,
-  STRING
+  STRING,
+  NUMBER
 };
 
 struct Token {
@@ -78,8 +81,8 @@ struct Token {
     //   return "IDENTIFIER";
     case TokenType::STRING:
       return "STRING";
-      // case TokenType::NUMBER:
-      //   return "NUMBER";
+    case TokenType::NUMBER:
+      return "NUMBER";
     case TokenType::EOF_TOKEN:
       return "EOF";
     default:
@@ -93,28 +96,47 @@ public:
   Scanner(std::string_view content)
       : line(1), content(content), current(0), start(0), has_error(false) {}
 
-  char peek_next() {
+  char peek() {
     if (at_content_end())
       return '\0';
     return content.at(current);
   }
 
+  char peek_next() {
+    if (current + 1 >= content.length())
+      return '\0';
+
+    return content.at(current + 1);
+  }
+
+  bool is_digit(char c) { return c >= '0' && c <= '9'; }
+
+  void handle_number() {
+    while (is_digit(peek()) && !at_content_end())
+      current++;
+
+    if (peek() == '.' && is_digit(peek_next())) {
+      current++;
+
+      while (is_digit(peek()) && !at_content_end())
+        current++;
+    }
+
+    std::string sub_num = content.substr(start, current - start);
+    double value = std::stod(sub_num);
+    std::ostringstream oss;
+    oss << value;
+    std::string formatted_num = oss.str();
+
+    if (formatted_num.find('.') == std::string::npos)
+      formatted_num += ".0";
+
+    add_token(NUMBER, formatted_num);
+  }
+
   void add_token(TokenType token_type) { add_token(token_type, "null"); }
 
   template <typename T> void add_token(TokenType type, T value) {
-    // std::string literal_str;
-
-    // if constexpr (std::is_same_v<T, std::string>) {
-    //   literal_str = value;
-    // } else if constexpr (std::is_same_v<T, double> ||
-    //                      std::is_same_v<T, float>) {
-    //   literal_str = std::to_string(value);
-    // } else if constexpr (std::is_same_v<T, int>) {
-    //   literal_str = std::to_string(value);
-    // } else if constexpr (std::is_same_v<T, bool>) {
-    //   literal_str = value ? "true" : "false";
-    // }
-
     std::string lexeme = content.substr(start, current - start);
     Token new_token = {
         .type = type, .lexeme = lexeme, .literal = value, .line = line};
@@ -123,7 +145,7 @@ public:
   }
 
   void handle_string() {
-    while (peek_next() != '"' && !at_content_end()) {
+    while (peek() != '"' && !at_content_end()) {
       if (peek_next() == '\n')
         line++;
 
@@ -237,7 +259,7 @@ public:
 
     case '/': {
       if (content[current] == '/') {
-        while (peek_next() != '\n' && !at_content_end())
+        while (peek() != '\n' && !at_content_end())
           current++;
       } else {
         add_token(SLASH);
@@ -258,14 +280,18 @@ public:
       break;
 
     default:
-      std::cerr << "[line " << line << "] "
-                << "Error: Unexpected character: " << token << '\n';
-      has_error = true;
-      break;
+      if (is_digit(token)) {
+        handle_number();
+      } else {
+        std::cerr << "[line " << line << "] "
+                  << "Error: Unexpected character: " << token << '\n';
+        has_error = true;
+        break;
+      }
     }
   }
 
-  bool at_content_end() { return current >= content.size(); }
+  bool at_content_end() { return current >= content.length(); }
 
   void scan_tokens() {
     while (!at_content_end()) {

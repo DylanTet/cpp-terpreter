@@ -1,4 +1,5 @@
 #include <iomanip>
+#include <ios>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -27,7 +28,8 @@ enum TokenType {
   BANG,
   BANG_EQUAL,
   STRING,
-  NUMBER
+  NUMBER,
+  IDENTIFIER
 };
 
 struct Token {
@@ -39,6 +41,8 @@ struct Token {
   std::string to_string(TokenType type) const {
     std::string res_string;
     switch (type) {
+    case TokenType::IDENTIFIER:
+      return "IDENTIFIER";
     case TokenType::LEFT_PAREN:
       return "LEFT_PAREN";
     case TokenType::RIGHT_PAREN:
@@ -109,6 +113,20 @@ public:
     return content.at(current + 1);
   }
 
+  bool is_alpha(char c) {
+    return (c >= 'a' & c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
+  }
+
+  bool is_alpha_num(char c) { return (is_alpha(c) || is_digit(c)); }
+
+  void handle_identifier() {
+    while (is_alpha_num(peek())) {
+      current++;
+    }
+
+    add_token(IDENTIFIER);
+  }
+
   bool is_digit(char c) { return c >= '0' && c <= '9'; }
 
   void handle_number() {
@@ -123,13 +141,33 @@ public:
     }
 
     std::string sub_num = content.substr(start, current - start);
+    size_t decimal = sub_num.find('.');
+    int decimal_places = 0;
+    if (decimal != std::string::npos) {
+      decimal_places = sub_num.length() - decimal - 1;
+    }
+
     double value = std::stod(sub_num);
     std::ostringstream oss;
-    oss << value;
+    oss << std::fixed << std::setprecision(decimal_places) << value;
     std::string formatted_num = oss.str();
+    size_t decimal_pos = formatted_num.find('.');
 
-    if (formatted_num.find('.') == std::string::npos)
+    if (decimal_pos == std::string::npos) {
       formatted_num += ".0";
+    } else {
+      // Remove trailing zeros, but keep at least one digit after decimal
+      size_t last_non_zero = formatted_num.find_last_not_of('0');
+
+      // If the last non-zero character is the decimal point itself
+      if (last_non_zero == decimal_pos) {
+        // Keep one zero after decimal
+        formatted_num = formatted_num.substr(0, decimal_pos + 2);
+      } else {
+        // Keep until the last non-zero digit
+        formatted_num = formatted_num.substr(0, last_non_zero + 1);
+      }
+    }
 
     add_token(NUMBER, formatted_num);
   }
@@ -282,6 +320,8 @@ public:
     default:
       if (is_digit(token)) {
         handle_number();
+      } else if (is_alpha(token)) {
+        handle_identifier();
       } else {
         std::cerr << "[line " << line << "] "
                   << "Error: Unexpected character: " << token << '\n';

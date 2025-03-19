@@ -4,9 +4,18 @@
 #include <sstream>
 #include <string>
 #include <string_view>
+#include <unordered_map>
 #include <vector>
 
 enum TokenType {
+  CLASS,
+  PRINT,
+  NIL,
+  SUPER,
+  ELSE,
+  RETURN,
+  THIS,
+  VAR,
   LEFT_PAREN,
   RIGHT_PAREN,
   LEFT_BRACE,
@@ -29,7 +38,16 @@ enum TokenType {
   BANG_EQUAL,
   STRING,
   NUMBER,
-  IDENTIFIER
+  IDENTIFIER,
+  AND,
+  FOR,
+  IF,
+  TRUE,
+  FALSE,
+  WHILE,
+  FUN,
+  OR,
+
 };
 
 struct Token {
@@ -41,6 +59,36 @@ struct Token {
   std::string to_string(TokenType type) const {
     std::string res_string;
     switch (type) {
+    case TokenType::RETURN:
+      return "RETURN";
+    case TokenType::SUPER:
+      return "SUPER";
+    case TokenType::CLASS:
+      return "CLASS";
+    case TokenType::PRINT:
+      return "PRINT";
+    case TokenType::NIL:
+      return "NIL";
+    case TokenType::ELSE:
+      return "ELSE";
+    case TokenType::VAR:
+      return "VAR";
+    case TokenType::AND:
+      return "AND";
+    case TokenType::FOR:
+      return "FOR";
+    case TokenType::IF:
+      return "IF";
+    case TokenType::TRUE:
+      return "TRUE";
+    case TokenType::FALSE:
+      return "FALSE";
+    case TokenType::WHILE:
+      return "WHILE";
+    case TokenType::FUN:
+      return "FUN";
+    case TokenType::OR:
+      return "OR";
     case TokenType::IDENTIFIER:
       return "IDENTIFIER";
     case TokenType::LEFT_PAREN:
@@ -81,14 +129,14 @@ struct Token {
       return "EQUAL";
     case TokenType::EQUAL_EQUAL:
       return "EQUAL_EQUAL";
-    // case TokenType::IDENTIFIER:
-    //   return "IDENTIFIER";
     case TokenType::STRING:
       return "STRING";
     case TokenType::NUMBER:
       return "NUMBER";
     case TokenType::EOF_TOKEN:
       return "EOF";
+    case TokenType::THIS:
+      return "THIS";
     default:
       return "UNKNOWN";
     }
@@ -114,7 +162,7 @@ public:
   }
 
   bool is_alpha(char c) {
-    return (c >= 'a' & c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
+    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
   }
 
   bool is_alpha_num(char c) { return (is_alpha(c) || is_digit(c)); }
@@ -124,7 +172,15 @@ public:
       current++;
     }
 
-    add_token(IDENTIFIER);
+    std::string current_text = content.substr(start, current - start);
+    TokenType word_type;
+    if (keywords.find(current_text) != keywords.end()) {
+      word_type = keywords.find(current_text)->second;
+    } else {
+      word_type = TokenType::IDENTIFIER;
+    }
+
+    add_token(word_type);
   }
 
   bool is_digit(char c) { return c >= '0' && c <= '9'; }
@@ -358,4 +414,15 @@ private:
   int start;
   uint16_t line;
   bool has_error;
+
+  std::unordered_map<std::string, TokenType> keywords = {
+      {"and", TokenType::AND},       {"class", TokenType::CLASS},
+      {"else", TokenType::ELSE},     {"false", TokenType::FALSE},
+      {"for", TokenType::FOR},       {"fun", TokenType::FUN},
+      {"if", TokenType::IF},         {"nil", TokenType::NIL},
+      {"or", TokenType::OR},         {"print", TokenType::PRINT},
+      {"return", TokenType::RETURN}, {"super", TokenType::SUPER},
+      {"this", TokenType::THIS},     {"true", TokenType::TRUE},
+      {"var", TokenType::VAR},       {"while", TokenType::WHILE},
+  };
 };
